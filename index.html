@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0B3C9E">
+<title>Invest Traduction</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+:root{--navy:#0B3C9E;--blue:#1769E0;--gold:#D9A21B;--bg:#F3F7FF;--ink:#0A1F4D;--line:#D5E0F5}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);padding-bottom:76px}
+header{background:var(--navy);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:12px;border-bottom:4px solid var(--gold)}
+header img{width:46px;height:46px;border-radius:10px;background:#fff;object-fit:contain}
+header b{font-size:18px;display:block}
+header small{color:#F2D27A;font-style:italic}
+header span{margin-left:auto;font-size:13px;text-align:right}
+main{padding:16px;max-width:620px;margin:auto}
+section{display:none}section.on{display:block}
+h2{margin:4px 0 12px;color:var(--navy)}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}
+label{font-size:13px;font-weight:600;display:block;margin:10px 0 4px}
+select,input,textarea{width:100%;padding:12px;border:1.5px solid var(--line);border-radius:10px;font-size:16px;font-family:inherit;background:#fff;color:var(--ink)}
+textarea{min-height:120px;resize:vertical}
+.row{display:flex;gap:8px;align-items:center}
+.row>*{flex:1}
+button{border:0;border-radius:10px;padding:13px;font-size:16px;font-weight:700;cursor:pointer;width:100%;margin-top:10px;background:var(--blue);color:#fff}
+button.gold{background:var(--gold);color:#241800}
+button.ghost{background:#fff;color:var(--navy);border:1.5px solid var(--navy)}
+.out{white-space:pre-wrap;background:#EAF1FF;border-radius:10px;padding:12px;margin-top:10px;min-height:44px}
+.note{font-size:13px;color:#4A5C86;margin:8px 0 0}
+.badge{display:inline-block;background:var(--gold);color:#241800;border-radius:20px;padding:3px 10px;font-size:12px;font-weight:700}
+nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:3px solid var(--gold);display:flex;padding-bottom:env(safe-area-inset-bottom,0)}
+nav button{background:none;color:var(--navy);margin:0;border-radius:0;font-size:12px;padding:10px 2px;flex:1}
+nav button.on{background:var(--navy);color:#fff}
+.voices{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.voice{border:1.5px solid var(--line);border-radius:10px;padding:10px;font-size:13px;cursor:pointer;background:#fff}
+.voice b{display:block;color:var(--navy);font-size:15px}
+.voice.sel{border-color:var(--gold);background:#FFF6DC}
+.voice.lock{opacity:.45}
+.plan{border:2px solid var(--navy);border-radius:12px;padding:12px;margin-bottom:10px}
+.plan h3{margin:0;color:var(--navy)}
+.plan strong{font-size:22px;color:var(--gold)}
+#login{position:fixed;inset:0;background:var(--navy);z-index:9;display:flex;align-items:center;justify-content:center;padding:20px}
+#login .card{width:100%;max-width:420px;text-align:center}
+#login img{width:120px}
+#printArea{display:none}
+@media print{body>*:not(#printArea){display:none!important}#printArea{display:block;white-space:pre-wrap;font:14pt/1.5 serif;padding:20px}}
+</style>
+</head>
+<body>
+
+<div id="login">
+  <div class="card">
+    <img src="logo.png" alt="" onerror="this.style.display='none'">
+    <h2>Invest Traduction</h2>
+    <p class="note">Toutes les langues, un seul monde.</p>
+    <input id="lPrenom" placeholder="Prénom">
+    <div style="height:8px"></div>
+    <input id="lNom" placeholder="Nom">
+    <div style="height:8px"></div>
+    <input id="lTel" type="tel" placeholder="Numéro de téléphone">
+    <button onclick="connexion()">Entrer</button>
+    <p id="lErr" class="note" style="color:#B3261E"></p>
+  </div>
+</div>
+
+<header>
+  <img src="logo.png" alt="" onerror="this.style.display='none'">
+  <div><b>INVEST TRADUCTION</b><small>Toutes les langues, un seul monde.</small></div>
+  <span id="who"></span>
+</header>
+
+<main>
+  <section id="s-texte" class="on">
+    <h2>Traduire un texte</h2>
+    <div class="card">
+      <div class="row">
+        <div><label>De</label><select id="tDe"></select></div>
+        <div><label>Vers</label><select id="tVers"></select></div>
+      </div>
+      <label>Ton texte</label>
+      <textarea id="tIn" placeholder="Écris ici..."></textarea>
+      <button onclick="traduireTexte()">Traduire</button>
+      <div class="out" id="tOut"></div>
+      <div class="row">
+        <button class="ghost" onclick="ecouter('tOut','tVers')">Écouter</button>
+        <button class="gold" onclick="versPDF('tOut')">Enregistrer en PDF</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="s-pdf">
+    <h2>Traduire un PDF</h2>
+    <div class="card">
+      <label>Choisis ton fichier PDF</label>
+      <input type="file" id="pFile" accept="application/pdf">
+      <div class="row">
+        <div><label>De</label><select id="pDe"></select></div>
+        <div><label>Vers</label><select id="pVers"></select></div>
+      </div>
+      <button onclick="traduirePDF()">Traduire le PDF</button>
+      <p class="note" id="pEtat"></p>
+      <div class="out" id="pOut"></div>
+      <button class="gold" onclick="versPDF('pOut')">Enregistrer en PDF</button>
+      <p class="note">Pour un PDF scanné (une photo de texte), le texte ne peut pas être lu.</p>
+    </div>
+  </section>
+
+  <section id="s-voix">
+    <h2>Traduction vocale</h2>
+    <div class="card">
+      <div class="row">
+        <div><label>Je parle en</label><select id="vDe"></select></div>
+        <div><label>Traduire en</label><select id="vVers"></select></div>
+      </div>
+      <button id="vBtn" onclick="parler()">Appuie et parle</button>
+      <label>Ce que tu as dit</label>
+      <div class="out" id="vIn"></div>
+      <label>Traduction</label>
+      <div class="out" id="vOut"></div>
+      <div class="row">
+        <button class="ghost" onclick="ecouter('vOut','vVers')">Écouter</button>
+        <button class="gold" onclick="versPDF('vOut')">Enregistrer en PDF</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="s-studio">
+    <h2>Texte en voix <span class="badge">Abonnement</span></h2>
+    <div class="card">
+      <label>Choisis une voix</label>
+      <div class="voices" id="vGrid"></div>
+      <label>Langue</label>
+      <select id="sLang"></select>
+      <label>Ton texte</label>
+      <textarea id="sText" placeholder="Écris le texte à lire..."></textarea>
+      <button class="gold" onclick="lire()">Lire avec cette voix</button>
+      <p class="note" id="sEtat"></p>
+    </div>
+  </section>
+
+  <section id="s-abo">
+    <h2>Abonnement</h2>
+    <div class="plan"><h3>Abonnement 5 000</h3><strong>5 000 / mois</strong><p class="note">Voix : Nina, Nicolas, Amanda, Movia.</p></div>
+    <div class="plan"><h3>Abonnement 10 000</h3><strong>10 000 / mois</strong><p class="note">Les 8 voix.</p></div>
+    <div class="card">
+      <b>Comment payer</b>
+      <p class="note">Montant en billets de ton pays (Franc CFA, Euro, Dollar...), au taux du jour.</p>
+      <p>• Dépôt par n'importe quel réseau mobile<br>• Carte de crédit<br>• Western Union</p>
+      <p class="note">Envoie ton paiement au numéro :</p>
+      <h3 style="margin:4px 0;color:var(--navy)" id="num"></h3>
+      <button class="ghost" onclick="copierNum()">Copier le numéro</button>
+      <button onclick="whatsapp()">J'ai payé : prévenir sur WhatsApp</button>
+    </div>
+    <div class="card">
+      <b>Activer mon abonnement</b>
+      <p class="note">Après ton paiement, tu reçois un code. Écris-le ici.</p>
+      <input id="aCode" placeholder="Code d'activation">
+      <button class="gold" onclick="activer()">Activer</button>
+      <p class="note" id="aEtat"></p>
+    </div>
+  </section>
+</main>
+
+<nav>
+  <button class="on" data-s="texte">Texte</button>
+  <button data-s="pdf">PDF</button>
+  <button data-s="voix">Voix</button>
+  <button data-s="studio">Studio</button>
+  <button data-s="abo">Abo</button>
+</nav>
+
+<div id="printArea"></div>
+
+<script>
+/* ====== À MODIFIER ====== */
+var NUMERO = "+229 01 99 64 02 02";
+var CODES = { "CODE5000": 5000, "CODE10000": 10000 }; // change ces codes et donne-les à tes clients
+/* ======================== */
+
+var LANGS = [["Français","fr","fr-FR"],["Anglais","en","en-US"],["Espagnol","es","es-ES"],["Portugais","pt","pt-PT"],["Allemand","de","de-DE"],["Italien","it","it-IT"],["Arabe","ar","ar-SA"],["Chinois","zh-CN","zh-CN"],["Japonais","ja","ja-JP"],["Coréen","ko","ko-KR"],["Russe","ru","ru-RU"],["Hindi","hi","hi-IN"],["Turc","tr","tr-TR"],["Néerlandais","nl","nl-NL"],["Polonais","pl","pl-PL"],["Suédois","sv","sv-SE"],["Grec","el","el-GR"],["Hébreu","he","he-IL"],["Swahili","sw","sw-KE"],["Yoruba","yo","yo-NG"],["Haoussa","ha","ha-NG"],["Wolof","wo","wo-SN"],["Lingala","ln","ln-CD"],["Vietnamien","vi","vi-VN"],["Thaï","th","th-TH"],["Indonésien","id","id-ID"],["Ukrainien","uk","uk-UA"],["Roumain","ro","ro-RO"],["Bengali","bn","bn-BD"],["Persan","fa","fa-IR"]];
+
+var VOIX = [
+  {n:"Nina",    s:"F", d:"Fille, voix très pure",        p:1.25, r:1.0,  min:5000},
+  {n:"Nicolas", s:"M", d:"Garçon, 39 ans",               p:0.85, r:1.0,  min:5000},
+  {n:"Amanda",  s:"F", d:"Fille, 19 ans",                p:1.45, r:1.05, min:5000},
+  {n:"Movia",   s:"F", d:"Femme, 58 ans",                p:0.8,  r:0.85, min:5000},
+  {n:"Adelo",   s:"M", d:"Garçon, 17 ans",               p:1.3,  r:1.05, min:10000},
+  {n:"Angelo",  s:"M", d:"Garçon, 28 ans, un peu robot", p:0.4,  r:0.9,  min:10000},
+  {n:"Frego",   s:"M", d:"Garçon, 20 ans",               p:1.05, r:1.0,  min:10000},
+  {n:"Lila",    s:"F", d:"Fille, 30 ans",                p:1.1,  r:1.0,  min:10000}
+];
+
+var $ = function(id){ return document.getElementById(id); };
+var voixChoisie = 0;
+
+function store(k, v){ try{ if(v===undefined) return localStorage.getItem(k); localStorage.setItem(k, v); }catch(e){ return null; } }
+
+["tDe","tVers","pDe","pVers","vDe","vVers","sLang"].forEach(function(id){
+  var s = $(id);
+  if(id.endsWith("De")){ var o=document.createElement("option"); o.value="Autodetect|"; o.textContent="Détecter la langue"; if(id!=="vDe") s.appendChild(o); }
+  LANGS.forEach(function(l){ var o=document.createElement("option"); o.value=l[1]+"|"+l[2]; o.textContent=l[0]; s.appendChild(o); });
+});
+$("tDe").selectedIndex = 0; $("tVers").value = "en|en-US"; $("pVers").value = "en|en-US"; $("vVers").value = "en|en-US";
+$("pDe").value = "fr|fr-FR"; $("vDe").value = "fr|fr-FR"; $("sLang").value = "fr|fr-FR";
+$("num").textContent = NUMERO;
+
+document.querySelectorAll("nav button").forEach(function(b){
+  b.onclick = function(){
+    document.querySelectorAll("nav button").forEach(function(x){ x.classList.remove("on"); });
+    document.querySelectorAll("section").forEach(function(x){ x.classList.remove("on"); });
+    b.classList.add("on"); $("s-"+b.dataset.s).classList.add("on"); window.scrollTo(0,0);
+  };
+});
+
+function connexion(){
+  var p=$("lPrenom").value.trim(), n=$("lNom").value.trim(), t=$("lTel").value.trim();
+  if(!p||!n||t.replace(/\D/g,"").length<8){ $("lErr").textContent="Remplis ton prénom, ton nom et ton numéro."; return; }
+  store("it_user", JSON.stringify({p:p,n:n,t:t})); ouvrir();
+}
+function ouvrir(){
+  var u = null; try{ u = JSON.parse(store("it_user")); }catch(e){}
+  if(!u) return;
+  $("login").style.display="none"; $("who").textContent = u.p+" "+u.n; majVoix();
+}
+ouvrir();
+
+function decouper(txt){
+  var parts = txt.match(/[^.!?\n]+[.!?\n]*/g) || [txt], out=[], cur="";
+  parts.forEach(function(s){
+    if((cur+s).length>450){ if(cur) out.push(cur); cur=s; while(cur.length>450){ out.push(cur.slice(0,450)); cur=cur.slice(450); } }
+    else cur+=s;
+  });
+  if(cur.trim()) out.push(cur);
+  return out;
+}
+async function traduire(txt, de, vers, etat){
+  var morceaux = decouper(txt), res=[];
+  for(var i=0;i<morceaux.length;i++){
+    if(etat) etat.textContent = "Traduction "+(i+1)+"/"+morceaux.length+"...";
+    var r = await fetch("https://api.mymemory.translated.net/get?q="+encodeURIComponent(morceaux[i])+"&langpair="+encodeURIComponent(de.split("|")[0]+"|"+vers.split("|")[0]));
+    var j = await r.json();
+    if(!j.responseData) throw new Error("Pas de réponse");
+    res.push(j.responseData.translatedText);
+  }
+  if(etat) etat.textContent="";
+  return res.join(" ");
+}
+async function traduireTexte(){
+  var t=$("tIn").value.trim(); if(!t) return;
+  $("tOut").textContent="Traduction...";
+  try{ $("tOut").textContent = await traduire(t,$("tDe").value,$("tVers").value); }
+  catch(e){ $("tOut").textContent="Erreur : vérifie ta connexion internet et réessaie."; }
+}
+
+async function traduirePDF(){
+  var f=$("pFile").files[0]; if(!f){ $("pEtat").textContent="Choisis d'abord un fichier PDF."; return; }
+  try{
+    pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    $("pEtat").textContent="Lecture du PDF...";
+    var pdf = await pdfjsLib.getDocument({data: await f.arrayBuffer()}).promise, texte="";
+    for(var i=1;i<=pdf.numPages;i++){
+      var pg = await pdf.getPage(i), c = await pg.getTextContent();
+      texte += c.items.map(function(x){ return x.str; }).join(" ")+"\n";
+    }
+    if(texte.trim().length<5){ $("pEtat").textContent="Aucun texte trouvé dans ce PDF."; return; }
+    $("pOut").textContent = await traduire(texte,$("pDe").value,$("pVers").value,$("pEtat"));
+    $("pEtat").textContent="Terminé.";
+  }catch(e){ $("pEtat").textContent="Erreur : impossible de traduire ce PDF."; }
+}
+
+function versPDF(id){
+  var t=$(id).textContent.trim(); if(!t){ alert("Rien à enregistrer."); return; }
+  $("printArea").textContent = "INVEST TRADUCTION\n\n"+t;
+  window.print();
+}
+
+var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+function parler(){
+  if(!SR){ alert("Ton navigateur ne gère pas la reconnaissance vocale. Utilise Chrome."); return; }
+  var rec = new SR(); rec.lang = $("vDe").value.split("|")[1]; rec.interimResults=false;
+  $("vBtn").textContent="Je t'écoute...";
+  rec.onresult = async function(e){
+    var dit = e.results[0][0].transcript; $("vIn").textContent=dit; $("vOut").textContent="Traduction...";
+    try{ $("vOut").textContent = await traduire(dit,$("vDe").value,$("vVers").value); }
+    catch(x){ $("vOut").textContent="Erreur de connexion."; }
+  };
+  rec.onerror = function(){ $("vIn").textContent="Je n'ai rien entendu. Réessaie."; };
+  rec.onend = function(){ $("vBtn").textContent="Appuie et parle"; };
+  rec.start();
+}
+
+function ecouter(id, langId){
+  var t=$(id).textContent.trim(); if(!t||!window.speechSynthesis) return;
+  var u=new SpeechSynthesisUtterance(t); u.lang=$(langId).value.split("|")[1];
+  speechSynthesis.cancel(); speechSynthesis.speak(u);
+}
+
+function plan(){
+  var p = parseInt(store("it_plan")||"0",10), fin = parseInt(store("it_fin")||"0",10);
+  return (p && Date.now()<fin) ? p : 0;
+}
+function majVoix(){
+  var g=$("vGrid"), a=plan(); g.innerHTML="";
+  VOIX.forEach(function(v,i){
+    var d=document.createElement("div"), ok = a>=v.min;
+    d.className="voice"+(i===voixChoisie?" sel":"")+(ok?"":" lock");
+    d.innerHTML="<b>"+v.n+"</b>"+v.d+(ok?"":"<br>Abonnement "+v.min);
+    d.onclick=function(){ if(!ok){ $("sEtat").textContent="Cette voix demande l'abonnement "+v.min+"."; return; } voixChoisie=i; majVoix(); };
+    g.appendChild(d);
+  });
+  $("aEtat").textContent = a ? "Abonnement "+a+" actif jusqu'au "+new Date(parseInt(store("it_fin"),10)).toLocaleDateString("fr-FR")+"." : "";
+}
+function lire(){
+  var a=plan(), v=VOIX[voixChoisie];
+  if(!a || a<v.min){ $("sEtat").textContent="Active un abonnement dans l'onglet Abo."; return; }
+  var t=$("sText").value.trim(); if(!t||!window.speechSynthesis) return;
+  var lang=$("sLang").value.split("|")[1], liste=speechSynthesis.getVoices().filter(function(x){ return x.lang.indexOf(lang.slice(0,2))===0; });
+  var fem=/female|femme|woman|amelie|marie|julie|denise|eloise|lea|samantha|google.*(fr|en).*/i, hom=/male|homme|man|thomas|henri|paul|daniel|jacques|george/i;
+  var pick = liste.filter(function(x){ return v.s==="F" ? (fem.test(x.name)&&!hom.test(x.name)) : hom.test(x.name); })[0] || liste[0];
+  var u=new SpeechSynthesisUtterance(t); u.lang=lang; if(pick) u.voice=pick; u.pitch=v.p; u.rate=v.r;
+  speechSynthesis.cancel(); speechSynthesis.speak(u); $("sEtat").textContent="Voix : "+v.n;
+}
+if(window.speechSynthesis) speechSynthesis.onvoiceschanged=function(){};
+
+function activer(){
+  var c=$("aCode").value.trim().toUpperCase();
+  if(!CODES[c]){ $("aEtat").textContent="Code incorrect."; return; }
+  store("it_plan",String(CODES[c])); store("it_fin",String(Date.now()+30*24*3600*1000)); majVoix();
+}
+function copierNum(){
+  if(navigator.clipboard) navigator.clipboard.writeText(NUMERO);
+  alert("Numéro copié : "+NUMERO);
+}
+function whatsapp(){
+  var u=null; try{ u=JSON.parse(store("it_user")); }catch(e){}
+  var m="Bonjour, j'ai payé mon abonnement Invest Traduction. Nom : "+(u?u.p+" "+u.n:"")+", numéro : "+(u?u.t:"");
+  window.open("https://wa.me/"+NUMERO.replace(/\D/g,"")+"?text="+encodeURIComponent(m),"_blank");
+}
+</script>
+</body>
+  </html>
